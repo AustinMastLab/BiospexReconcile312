@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<title>{{header.title}}</title>
+
+<style>
+    {% include 'report.css' -%}
+</style>
+
+</head>
+
+<body>
+
+  <header>
+    <h1>{{header.title}}</h1>
+    <div><label>Date:</label><span>{{header.date}}</span></div>
+    <div><label>Number of Subjects:</label><span>{{ '{:,}'.format(header.subjects) }}</span></div>
+    <div><label>Number of Transcripts:</label><span>{{ '{:,}'.format(header.transcripts) }}</span></div>
+    <div><label>Transcripts per Subject:</label><span>{{ '{:.2f}'.format(header.ratio) }}</span></div>
+    <div><label>Transcriber Count:</label><span>{{ '{:,}'.format(header.transcribers) }}</span></div>
+  </header>
+
+  {% if args.user_column %}
+    <section id="users">
+      <h2>Transcriber Summary</h2>
+      <button title="Expand or collapse the top transcribers table"></button>
+      <div class="users-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="left">Transcriber</th>
+              <th class="right">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for transcriber in transcribers %}
+            <tr>
+              <td class="left">{{transcriber.name}}</td>
+              <td class="right">{{ '{:,}'.format(transcriber.count) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="users-chart">
+        <h2>Transcriptions per Transcriber</h2>
+        <svg width="960" height="500"></svg>
+      </div>
+
+    </section>
+  {% endif %}
+
+  <section id="stats">
+    <h2>Reconciliation Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th colspan="2"></th>
+          <th colspan="5">Reconciled</th>
+          <th colspan="1"></th>
+        </tr>
+        <tr>
+          <th class="left">Field</th>
+          <th class="left">Type</th>
+          <th class="right">Unanimous Matches</th>
+          <th class="right">Majority Matches</th>
+          <th class="right">Mean Mode Range</th>
+          <th class="right">Fuzzy Matches</th>
+          <th class="right">All Blank</th>
+          <th class="right">One Transcript</th>
+          <th class="right">Total</th>
+          <th class="right">No Matches</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in reconciled %}
+        <tr>
+          <td class="left">{{row.name}}</td>
+          <td class="left">{{row.col_type}}</td>
+          <td class="right">{{ '{:,}'.format(row.num_unanimous_match) }}</td>
+          <td class="right">{{ '{:,}'.format(row.num_majority_match) }}</td>
+          <td class="right">{{ row.num_mmr }}</td>
+          <td class="right">{{ row.num_fuzzy_match }}</td>
+          <td class="right">{{ '{:,}'.format(row.num_all_blank) }}</td>
+          <td class="right">{{ '{:,}'.format(row.num_onesies) }}</td>
+          <td class="right">{{ '{:,}'.format(row.num_reconciled) }}</td>
+          <td class="right">{{ '{:,}'.format(row.num_no_match) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section id="groups">
+    <h2>Reconciliation Detail</h2>
+    <label>Filter Rows:</label>
+    <select class="filter">
+      {% for val in filters.__select__ %}
+        <option {% if loop.first %} selected="selected" {% endif %}>{{val}}</option>
+      {% endfor %}
+    </select>
+    <table>
+      <thead>
+        <tr class="closed">
+          <th class="no-ul"><button title="Open or close all subjects"></button></th>
+          {% for column in columns %}
+            <th>{{column}}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="pager-container">
+      <button class="first-page" title="First page">&lt;&lt;</button>
+      <button  class="previous-page"title="Previous page">&lt;</button>
+      <label>Page:</label>
+      <input class="pager" type="number" min="1" step="1" value="1"/>
+      <label class="max-page"></label>
+      <button class="next-page" title="Next page">&gt;</button>
+      <button class="last-page" title="Last page">&gt;&gt;</button>
+  </div>
+  </section>
+
+<script>
+{% include 'd3.min.js' -%}
+</script>
+
+<script>
+const groups = {
+    {% for key, value in groups %}"{{key | safe}}": {{value | safe}},
+    {% endfor %}
+};
+{% include 'transcriptions.js' -%}
+</script>
+
+<script>
+{% include 'users.js' -%}
+</script>
+
+<script>
+{% include 'reconciliation.js' -%}
+</script>
+
+</body>
+</html>
